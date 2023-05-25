@@ -1,5 +1,7 @@
 import graphene
 from graphene_django import DjangoObjectType
+from graphql import GraphQLError
+from django.db.models import Q
 
 from .models import User
 from .models import StatsUser
@@ -18,9 +20,20 @@ class StatsUserType(DjangoObjectType):
 
 class Query(graphene.ObjectType):
 
-    users = graphene.List(UserType)
+    users = graphene.List(UserType, search=graphene.String())
 
-    def resolve_users(self, info, **kwargs):
+
+    def resolve_users(self, info, search=None, **kwargs):
+
+        if search:
+
+            filter = (
+                Q(username__icontains=search)
+                
+            )
+
+            return User.objects.filter(filter)
+
         return User.objects.all()
 
 # MUTATIONS
@@ -58,6 +71,7 @@ class CreateUser(graphene.Mutation):
 
 
         return CreateUser(
+
             id = user.id,
             username = user.username,
             stats = user.stats
