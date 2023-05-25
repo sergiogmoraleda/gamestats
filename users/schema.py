@@ -20,25 +20,37 @@ class StatsUserType(DjangoObjectType):
 
 class Query(graphene.ObjectType):
 
-    users = graphene.List(UserType, search=graphene.String())
+    users = graphene.List(
+        UserType,
+        search=graphene.String(),
+        first = graphene.Int(),
+        skip= graphene.Int(),
+        )
 
 
-    def resolve_users(self, info, search=None, **kwargs):
+    def resolve_users(self, info, search=None,first= None, skip= None, **kwargs):
+
+        qs = User.objects.all()
 
         if search:
 
             filter = (
-                Q(username__icontains=search)
-                
+                Q(username__icontains=search)            
             )
+            
+            qs = qs.filter(filter)
+            
+        if skip:
+            qs = qs[skip:]
+            
+        if first:
+            qs = qs[:first]
 
-            return User.objects.filter(filter)
+        return qs
 
-        return User.objects.all()
+        
 
 # MUTATIONS
-
-
 
 class StatsUserInput(graphene.InputObjectType):
     
